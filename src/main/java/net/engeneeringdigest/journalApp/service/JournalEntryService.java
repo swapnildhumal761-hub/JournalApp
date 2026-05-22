@@ -32,6 +32,9 @@ public class JournalEntryService {
             JournalEntry saved = journalEntryRepository.save(journalEntry);
             user.getJournalEntries().add(saved);
 //            user.setUserName(null);
+//            here we save just new entry of journal entries
+//            we are not saving new entry of user so no need to rehash password again
+//            we are saving old user with journal entries......
             userService.saveUser(user);
         }catch (Exception e){
             throw new RuntimeException("Error while saving Entry. ",e);
@@ -50,11 +53,23 @@ public class JournalEntryService {
         return journalEntryRepository.findById(id);
     }
 
-    public void deleteById(ObjectId id, String userName){
-        User user = userService.findByUserName(userName);
-        user.getJournalEntries().removeIf(x -> x.getId().equals(id));
-        userService.saveUser(user);
-        journalEntryRepository.deleteById(id);
+
+//    here we do two database operations........
+    @Transactional
+    public boolean deleteById(ObjectId id, String userName){
+        boolean removed = false;
+        try {
+            User user = userService.findByUserName(userName);
+            removed = user.getJournalEntries().removeIf(x -> x.getId().equals(id));
+            if(removed){
+                userService.saveUser(user);
+                journalEntryRepository.deleteById(id);
+            }
+        }catch (Exception e){
+            System.out.println("Error while deleting Entry. ");
+            throw new RuntimeException("Error while deleting Entry. ",e);
+        }
+        return removed;
     }
 
 }

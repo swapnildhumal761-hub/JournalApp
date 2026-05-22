@@ -25,8 +25,7 @@ public class PublicController {
 
     @PostMapping("/register")
     public String createUser(@RequestBody User user){
-        userService.saveUser(user);
+        userService.saveNewUser(user);
         return "user registered successfully";
     }
-
 }

@@ -11,4 +11,5 @@ public interface UserRepository extends MongoRepository<User, ObjectId> {
 //   here we create method to find user
 //    Yes — Spring will try to build the query automatically, but only if the method name matches a real field correctly.
     User findByUserName(String userName);
+    void deleteByUserName(String userName);
 }
