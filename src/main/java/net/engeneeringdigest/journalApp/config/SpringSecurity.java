@@ -4,9 +4,11 @@ import net.engeneeringdigest.journalApp.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,7 +23,6 @@ public class SpringSecurity {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
-
 //①	.authenticationProvider(...)	Registers DaoAuthenticationProvider to verify username/password
 //②	.requestMatchers("/public/**").permitAll()	Authorization rule: Anyone can access /public/register — no login needed
 //③	.requestMatchers("/journal/**", "/user/**").authenticated()	Authorization rule: /user/** requires a valid authenticated user
@@ -33,6 +34,7 @@ public class SpringSecurity {
 
 //    The order of requestMatchers matters! Spring evaluates them top to bottom and uses the first match.
 //    If you put .anyRequest().authenticated() first, /public/** would never be public.
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -48,13 +50,13 @@ public class SpringSecurity {
     }
 
 
-
 //    DAO = Data Access Object (database)
 //    This class knows how to authenticate using DB users
 //            It performs:
 //    Load user from DB
 //    Compare passwords
 //    Give roles/authorities
+
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -63,11 +65,21 @@ public class SpringSecurity {
         return provider;
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration auth) throws Exception {
+        return auth.getAuthenticationManager();
+    }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
+
+
+
+
 
 }
 
