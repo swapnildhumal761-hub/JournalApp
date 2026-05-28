@@ -1,5 +1,7 @@
 package net.engeneeringdigest.journalApp.config;
 
+import jakarta.servlet.Filter;
+import net.engeneeringdigest.journalApp.filter.JwtFilter;
 import net.engeneeringdigest.journalApp.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +17,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -22,6 +25,10 @@ public class SpringSecurity {
 
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private JwtFilter  jwtFilter;
+
 
 //①	.authenticationProvider(...)	Registers DaoAuthenticationProvider to verify username/password
 //②	.requestMatchers("/public/**").permitAll()	Authorization rule: Anyone can access /public/register — no login needed
@@ -35,6 +42,7 @@ public class SpringSecurity {
 //    The order of requestMatchers matters! Spring evaluates them top to bottom and uses the first match.
 //    If you put .anyRequest().authenticated() first, /public/** would never be public.
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -44,8 +52,9 @@ public class SpringSecurity {
                         .requestMatchers("/journal/**", "/user/**").authenticated()  // ③ Must be logged in
                         .requestMatchers("/admin/**").hasRole("ADMIN") // ④ Must have ADMIN role
                         .anyRequest().authenticated())                 // ⑤ Everything else → login
-                .httpBasic(Customizer.withDefaults())                  // ⑥ Use HTTP Basic Auth
+//                .httpBasic(Customizer.withDefaults())                  // ⑥ Use HTTP Basic Auth  ... here I do httpBasicAuth commit due use of jwtAuthentication
                 .csrf(AbstractHttpConfigurer::disable)                 // ⑦ Disable CSRF (for APIs)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -73,7 +82,6 @@ public class SpringSecurity {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-
         return new BCryptPasswordEncoder();
     }
 
